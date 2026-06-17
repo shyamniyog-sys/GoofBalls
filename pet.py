@@ -4,7 +4,7 @@ import os
 import random
 
 class DesktopPet:
-    def __init__(self, root, default_folder, wagging_folder, lift_folder, hi_folder):
+    def __init__(self, root, default_folder, pat_pat_folder, lift_folder, hi_folder):
         self.root = root
         
         # --- WINDOW CONFIGURATION ---
@@ -17,7 +17,7 @@ class DesktopPet:
         # --- STATE INITIALIZATION ---
         self.frames = {
             "default": self.load_frames(default_folder),
-            "wagging": self.load_frames(wagging_folder),
+            "pat-pat": self.load_frames(pat_pat_folder),
             "lift": self.load_frames(lift_folder),
             "hi": self.load_frames(hi_folder)
         }
@@ -41,7 +41,7 @@ class DesktopPet:
         files = sorted([f for f in os.listdir(folder_path) if f.endswith(".png")])
         for file in files:
             path = os.path.join(folder_path, file)
-            img = Image.open(path).convert('RGBA').resize((250, 250), Image.Resampling.LANCZOS)
+            img = Image.open(path).convert('RGBA').resize((150, 150), Image.Resampling.LANCZOS)
             alpha = img.split()[-1].point(lambda p: 255 if p > 128 else 0)
             img.putalpha(alpha)
             frames.append(ImageTk.PhotoImage(img))
@@ -53,15 +53,15 @@ class DesktopPet:
             self.label.config(image=state_frames[self.current_frame])
             
             # --- ANIMATION LOGIC ---
-            if self.current_state in ["wagging", "hi"]:
+            if self.current_state in ["pat-pat", "hi"]:
                 if self.current_frame < len(state_frames) - 1:
                     self.current_frame += 1
                 else:
                     self.current_frame = 0
                     self.action_count += 1
                     
-                    # wagging plays 3 times, hi plays 4 times
-                    limit = 3 if self.current_state == "wagging" else 4
+                    # pat-pat plays 3 times, hi plays 4 times
+                    limit = 3 if self.current_state == "pat-pat" else 4
                     
                     if self.action_count >= limit:
                         self.current_state = "default"
@@ -89,7 +89,7 @@ class DesktopPet:
         if not self.is_dragging and self.current_state == "default":
             # --- RANDOM ACTION LOGIC ---
             if random.choice([True, False]):
-                self.current_state = "wagging"
+                self.current_state = "pat-pat"
             else:
                 self.current_state = "hi"
             self.current_frame = 0
@@ -102,6 +102,6 @@ class DesktopPet:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    # Ensure you have 'default', 'wagging', 'lift', and 'hi' folders
-    pet_app = DesktopPet(root, "default", "wagging", "lift", "hi")
+    # Ensure you have 'default', 'pat-pat', 'lift', and 'hi' folders
+    pet_app = DesktopPet(root, "default", "pat-pat", "lift", "hi")
     root.mainloop()
