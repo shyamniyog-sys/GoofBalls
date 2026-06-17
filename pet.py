@@ -102,19 +102,38 @@ class DesktopPet:
         
         self.context_menu = tk.Toplevel(self.root)
         self.context_menu.overrideredirect(True)
-        self.context_menu.config(bg="#5C4033")
-        self.context_menu.attributes("-topmost", True)
         
+        # 1. Make the window background transparent so the rounded corners can be seen
+        menu_trans_color = '#000002'
+        self.context_menu.config(bg=menu_trans_color)
+        self.context_menu.attributes("-transparentcolor", menu_trans_color)
+        self.context_menu.attributes("-topmost", True)
         self.context_menu.geometry(f"+{event.x_root}+{event.y_root}")
         
-        inner = tk.Frame(self.context_menu, bg="#D2B48C")
-        inner.pack(padx=1, pady=1)
+        # 2. Define menu size and corner radius
+        width, height = 90, 35
+        radius = 12
         
-        sleep_item = tk.Label(inner, text="Sleep", bg="#D2B48C", fg="#4A2F13", font=("Arial", 10), padx=15, pady=5, cursor="hand2")
-        sleep_item.pack()
+        # 3. Create a canvas instead of a frame to draw the rounded box
+        canvas = tk.Canvas(self.context_menu, width=width, height=height, bg=menu_trans_color, highlightthickness=0)
+        canvas.pack()
         
+        # Draw the rounded rectangle background using overlapping ovals and rectangles
+        bg_color = "#D2B48C"
+        canvas.create_oval(0, 0, radius*2, radius*2, fill=bg_color, outline="")
+        canvas.create_oval(width-radius*2, 0, width, radius*2, fill=bg_color, outline="")
+        canvas.create_oval(0, height-radius*2, radius*2, height, fill=bg_color, outline="")
+        canvas.create_oval(width-radius*2, height-radius*2, width, height, fill=bg_color, outline="")
+        canvas.create_rectangle(radius, 0, width-radius, height, fill=bg_color, outline="")
+        canvas.create_rectangle(0, radius, width, height-radius, fill=bg_color, outline="")
+        
+        # 4. Place the Sleep label inside the canvas window
+        sleep_item = tk.Label(canvas, text="Sleep", bg=bg_color, fg="#4A2F13", font=("Arial", 10), cursor="hand2")
+        canvas.create_window(width // 2, height // 2, window=sleep_item)
+        
+        # Hover animations
         sleep_item.bind("<Enter>", lambda e: sleep_item.config(bg="#8B5A2B", fg="white"))
-        sleep_item.bind("<Leave>", lambda e: sleep_item.config(bg="#D2B48C", fg="#4A2F13"))
+        sleep_item.bind("<Leave>", lambda e: sleep_item.config(bg=bg_color, fg="#4A2F13"))
         sleep_item.bind("<Button-1>", lambda e: self.on_sleep_click())
         
         self.context_menu.focus_set()
