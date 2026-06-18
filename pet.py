@@ -4,6 +4,10 @@ import os
 import random
 import time
 import math  # <-- Added for the sine wave bobbing effect
+import webbrowser
+
+SURPRISE_IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp")
+SURPRISE_ANIM_SPEED = 0.5 # 800ms per frame — between slow slideshow and normal anim
 
 class DesktopPet:
     def __init__(self, root, default_folder, wagging_folder, lift_folder, hi_folder, tongue_folder, 
@@ -18,6 +22,7 @@ class DesktopPet:
         self.root.attributes("-transparentcolor", self.transparent_color)
         
         # --- STATE INITIALIZATION ---
+        self.base_dir = os.path.dirname(os.path.abspath(__file__))
         self.pil_frames = {}
         self.frames = {
             "default": self.load_frames(default_folder),
@@ -28,7 +33,8 @@ class DesktopPet:
             "pat_pat": self.load_frames(pat_pat_folder),
             "walking": self.load_frames(walking_folder, save_pil_key="walking"),
             "walking_flipped": self.load_frames(walking_folder, flip=True, save_pil_key="walking_flipped"),
-            "sleeping": self.load_frames(sleeping_folder, save_pil_key="sleeping")
+            "sleeping": self.load_frames(sleeping_folder, save_pil_key="sleeping"),
+            "surprise": self.load_surprise_frames(os.path.join(self.base_dir, "RandomWebiste"))
         }
         self.current_state = "default"
         self.current_frame = 0
@@ -39,6 +45,7 @@ class DesktopPet:
         self.context_menu = None
         self.zzz_windows = []
         self.zzz_timer = None
+        self.surprise_active = False
         
         # --- SMOOTH MOVEMENT & TIMING VARIABLES ---
         self.walk_speed = 3.0  # How fast the pet glides across the screen
@@ -83,6 +90,22 @@ class DesktopPet:
             self.pil_frames[save_pil_key] = pil_list
         return frames
 
+    def load_surprise_frames(self, folder_path):
+        frames = []
+        if not os.path.isdir(folder_path):
+            return frames
+        files = sorted([
+            f for f in os.listdir(folder_path)
+            if os.path.splitext(f)[1].lower() in SURPRISE_IMAGE_EXTENSIONS
+        ])
+        for file in files:
+            path = os.path.join(folder_path, file)
+            img = Image.open(path).convert("RGBA").resize((150, 150), Image.Resampling.LANCZOS)
+            alpha = img.split()[-1].point(lambda p: 255 if p > 128 else 0)
+            img.putalpha(alpha)
+            frames.append(ImageTk.PhotoImage(img))
+        return frames
+
     def check_and_trigger_wagging(self):
         if self.current_state == "default":
             self.current_state = "wagging"
@@ -111,7 +134,12 @@ class DesktopPet:
         self.context_menu.geometry(f"+{event.x_root}+{event.y_root}")
         
         # 2. Define menu size and corner radius
-        width, height = 90, 35
+        item_height = 35
+        width = 130
+        menu_items = [("Sleep", self.on_sleep_click)]
+        if not self.is_asleep():
+            menu_items.append(("Surprise me!", self.on_surprise_click))
+        height = item_height * len(menu_items)
         radius = 12
         
         # 3. Create a canvas instead of a frame to draw the rounded box
@@ -127,14 +155,13 @@ class DesktopPet:
         canvas.create_rectangle(radius, 0, width-radius, height, fill=bg_color, outline="")
         canvas.create_rectangle(0, radius, width, height-radius, fill=bg_color, outline="")
         
-        # 4. Place the Sleep label inside the canvas window
-        sleep_item = tk.Label(canvas, text="Sleep", bg=bg_color, fg="#4A2F13", font=("Arial", 10), cursor="hand2")
-        canvas.create_window(width // 2, height // 2, window=sleep_item)
-        
-        # Hover animations
-        sleep_item.bind("<Enter>", lambda e: sleep_item.config(bg="#8B5A2B", fg="white"))
-        sleep_item.bind("<Leave>", lambda e: sleep_item.config(bg=bg_color, fg="#4A2F13"))
-        sleep_item.bind("<Button-1>", lambda e: self.on_sleep_click())
+        # 4. Place menu labels inside the canvas
+        for index, (label_text, command) in enumerate(menu_items):
+            item = tk.Label(canvas, text=label_text, bg=bg_color, fg="#4A2F13", font=("Arial", 10), cursor="hand2")
+            canvas.create_window(width // 2, item_height // 2 + index * item_height, window=item)
+            item.bind("<Enter>", lambda e, lbl=item: lbl.config(bg="#8B5A2B", fg="white"))
+            item.bind("<Leave>", lambda e, lbl=item: lbl.config(bg=bg_color, fg="#4A2F13"))
+            item.bind("<Button-1>", lambda e, cmd=command: cmd())
         
         self.context_menu.focus_set()
         self.context_menu.bind("<FocusOut>", lambda e: self.close_context_menu())
@@ -148,11 +175,46 @@ class DesktopPet:
                 pass
             self.context_menu = None
 
+    def is_asleep(self):
+        return self.current_state in ["sleeping_phase1", "sleeping_phase2", "sleeping_phase3"]
+
     def on_sleep_click(self):
         self.close_context_menu()
         if self.current_state in ["walking_down", "sleeping_phase1", "sleeping_phase2", "sleeping_phase3", "walking_up"]:
             return
         self.start_sleep_flow()
+
+    def on_surprise_click(self):
+        self.close_context_menu()
+        if self.is_asleep() or self.surprise_active:
+            return
+        self.start_surprise_flow()
+
+    def load_random_website_url(self):
+        websites_file = os.path.join(self.base_dir, "Random Websites.txt")
+        with open(websites_file, "r", encoding="utf-8") as file:
+            urls = [line.strip() for line in file if line.strip()]
+        if not urls:
+            raise ValueError("No websites found in Random Websites.txt")
+        return random.choice(urls)
+
+    def start_surprise_flow(self):
+        surprise_frames = self.frames.get("surprise", [])
+        if not surprise_frames:
+            self.finish_surprise_flow()
+            return
+        self.surprise_active = True
+        self.current_state = "surprise"
+        self.current_frame = 0
+        self.action_count = 0
+
+    def finish_surprise_flow(self):
+        try:
+            webbrowser.open(self.load_random_website_url())
+        except Exception:
+            pass
+        finally:
+            self.surprise_active = False
 
     def start_sleep_flow(self):
         screen_width = self.root.winfo_screenwidth()
@@ -360,6 +422,8 @@ class DesktopPet:
             # --- ANIMATION LOGIC (Regulated by state-specific timers) ---
             if self.current_state in ["walking_down", "walking_up"]:
                 current_delay = self.walk_anim_speed
+            elif self.current_state == "surprise":
+                current_delay = SURPRISE_ANIM_SPEED
             else:
                 current_delay = self.normal_anim_speed
 
@@ -367,7 +431,7 @@ class DesktopPet:
             if current_time - self.last_frame_time >= current_delay:
                 self.last_frame_time = current_time
                 
-                if self.current_state in ["wagging", "hi", "tongue", "pat_pat"]:
+                if self.current_state in ["wagging", "hi", "tongue", "pat_pat", "surprise"]:
                     if self.current_frame < len(state_frames) - 1:
                         self.current_frame += 1
                     else:
@@ -380,6 +444,8 @@ class DesktopPet:
                         else: limit = 1
                         
                         if self.action_count >= limit:
+                            if self.current_state == "surprise":
+                                self.finish_surprise_flow()
                             self.current_state = "default"
                             self.action_count = 0
                 elif self.current_state in ["sleeping_phase1", "sleeping_phase2", "sleeping_phase3"]:
@@ -429,7 +495,7 @@ class DesktopPet:
             self.y = event.y
             self.is_dragging = False
             return
-        if self.current_state in ["walking_down", "walking_up"]:
+        if self.current_state in ["walking_down", "walking_up", "surprise"]:
             return
         self.x, self.y = event.x, event.y
         self.is_dragging = False 
@@ -444,7 +510,7 @@ class DesktopPet:
             self.pos_y = float(y)
             return
             
-        if self.current_state in ["walking_down", "walking_up"]:
+        if self.current_state in ["walking_down", "walking_up", "surprise"]:
             return
             
         if not self.is_dragging:
@@ -464,7 +530,7 @@ class DesktopPet:
                 self.wake_up()
             self.is_dragging = False
             return
-        if self.current_state in ["walking_down", "walking_up"]:
+        if self.current_state in ["walking_down", "walking_up", "surprise"]:
             return
         if not self.is_dragging and self.current_state == "default":
             if random.choice([True, False]):
