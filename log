@@ -1,1 +1,44 @@
 pip install pillow
+
+
+
+OCR:
+
+Here is the complete, enhanced code. I have integrated a robust OCREngine class, a RetroOcrUI class for the pixel-art styling, and updated the DesktopPet class to handle the new OCR workflow, menus, and hotkeys.
+
+Prerequisites
+You will need to install PaddleOCR and OpenCV for this feature to work:
+
+
+pip install pytesseract pillow opencv-python
+
+
+
+and then i had to do this :
+
+This isn't a PaddleOCR problem. It's a Windows path length limit problem.
+
+You're using Python 3.13 from the Microsoft Store, and PaddleOCR pulls in modelscope, which creates extremely long folder names.
+
+Quick Fix 1 (Recommended)
+
+Enable Windows Long Paths.
+
+Open PowerShell as Administrator and run:
+
+New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" `
+-Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
+
+Then restart Windows.
+
+After restarting:
+
+pip install paddleocr
+
+
+now only it installed successfully
+
+
+next
+
+pip install paddlepaddle

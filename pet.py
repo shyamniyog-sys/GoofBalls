@@ -31,8 +31,8 @@ class DesktopPet:
             "hi": self.load_frames(hi_folder),
             "tongue": self.load_frames(tongue_folder),
             "pat_pat": self.load_frames(pat_pat_folder),
-            "walking": self.load_frames(walking_folder, save_pil_key="walking"),
-            "walking_flipped": self.load_frames(walking_folder, flip=True, save_pil_key="walking_flipped"),
+            "walking_left": self.load_walking_sprite(walking_folder, "LEFT.png", "walking_left"),
+            "walking_right": self.load_walking_sprite(walking_folder, "RIGHT.png", "walking_right"),
             "sleeping": self.load_frames(sleeping_folder, save_pil_key="sleeping"),
             "surprise": self.load_surprise_frames(os.path.join(self.base_dir, "RandomWebiste"))
         }
@@ -48,7 +48,7 @@ class DesktopPet:
         self.surprise_active = False
         
         # --- SMOOTH MOVEMENT & TIMING VARIABLES ---
-        self.walk_speed = 3.0  # How fast the pet glides across the screen
+        self.walk_speed = 5.5  # Shared speed for walking to sleep and waking up
         self.pos_x = float(self.root.winfo_x())
         self.pos_y = float(self.root.winfo_y())
         self.last_frame_time = time.time()
@@ -89,6 +89,24 @@ class DesktopPet:
         if save_pil_key:
             self.pil_frames[save_pil_key] = pil_list
         return frames
+
+    def load_walking_sprite(self, folder_path, filename, pil_key):
+        frames = []
+        pil_list = []
+        path = os.path.join(folder_path, filename)
+        if os.path.isfile(path):
+            img = Image.open(path).convert("RGBA").resize((150, 150), Image.Resampling.LANCZOS)
+            alpha = img.split()[-1].point(lambda p: 255 if p > 128 else 0)
+            img.putalpha(alpha)
+            frames.append(ImageTk.PhotoImage(img))
+            pil_list.append(img)
+        if pil_key:
+            self.pil_frames[pil_key] = pil_list
+        return frames
+
+    def set_walk_sprite_for_direction(self, from_x, to_x):
+        # Right-to-left uses LEFT.png; left-to-right uses RIGHT.png
+        self.walk_sprite_key = "walking_left" if to_x < from_x else "walking_right"
 
     def load_surprise_frames(self, folder_path):
         frames = []
@@ -227,7 +245,7 @@ class DesktopPet:
             self.walk_target_x = screen_width - 150
             
         self.walk_target_y = screen_height - 150
-        self.walk_flip = (self.walk_target_x > current_x)
+        self.set_walk_sprite_for_direction(current_x, self.walk_target_x)
         
         # Sync floats for movement
         self.pos_x = float(current_x)
@@ -266,7 +284,7 @@ class DesktopPet:
         self.current_state = "sleeping_phase1"
         self.current_frame = 0
         
-        walk_key = "walking_flipped" if getattr(self, "walk_flip", False) else "walking"
+        walk_key = getattr(self, "walk_sprite_key", "walking_right")
         w_idx = min(self.current_frame, len(self.pil_frames[walk_key]) - 1)
         start_img = self.pil_frames[walk_key][w_idx]
         end_img = self.pil_frames["sleeping"][0]
@@ -388,10 +406,11 @@ class DesktopPet:
         max_y = max(min_y + 1, int(screen_height * 0.6) - 150)
         self.walk_target_y = random.randint(min_y, max_y)
         
-        self.walk_flip = (self.walk_target_x > self.root.winfo_x())
+        current_x = self.root.winfo_x()
+        self.set_walk_sprite_for_direction(current_x, self.walk_target_x)
         
         # Sync floats for movement
-        self.pos_x = float(self.root.winfo_x())
+        self.pos_x = float(current_x)
         self.pos_y = float(self.root.winfo_y())
         
         self.current_state = "walking_up"
@@ -401,7 +420,7 @@ class DesktopPet:
         # Resolve frame mapping
         frame_key = self.current_state
         if self.current_state in ["walking_down", "walking_up"]:
-            frame_key = "walking_flipped" if getattr(self, "walk_flip", False) else "walking"
+            frame_key = getattr(self, "walk_sprite_key", "walking_right")
         elif self.current_state in ["sleeping_phase1", "sleeping_phase2", "sleeping_phase3"]:
             frame_key = "sleeping"
 
