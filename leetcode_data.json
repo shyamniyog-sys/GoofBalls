@@ -1,0 +1,68 @@
+{
+    "profile": "shyam_niyog",
+    "tracked": [
+        {
+            "titleSlug": "maximum-depth-of-binary-tree",
+            "title": "Maximum Depth of Binary Tree",
+            "date_solved": "2026-06-15T17:04:04",
+            "ask_date": "2026-06-25T17:04:04"
+        },
+        {
+            "titleSlug": "maximum-subarray",
+            "title": "Maximum Subarray",
+            "date_solved": "2026-06-21T00:54:55",
+            "ask_date": "2026-07-01T00:54:55"
+        }
+    ],
+    "ask_queue": [],
+    "completed": [
+        {
+            "titleSlug": "two-sum",
+            "title": "Two Sum",
+            "next_ask_date": "2026-07-21T17:26:30.125617",
+            "review_stage": 2
+        },
+        {
+            "titleSlug": "merge-two-sorted-lists",
+            "title": "Merge Two Sorted Lists",
+            "next_ask_date": "2026-07-21T17:35:49.935079",
+            "review_stage": 2
+        },
+        {
+            "titleSlug": "diameter-of-binary-tree",
+            "title": "Diameter of Binary Tree",
+            "next_ask_date": "2026-07-21T17:35:49.935098",
+            "review_stage": 2
+        },
+        {
+            "titleSlug": "binary-tree-level-order-traversal",
+            "title": "Binary Tree Level Order Traversal",
+            "next_ask_date": "2026-07-21T17:35:49.935104",
+            "review_stage": 2
+        },
+        {
+            "titleSlug": "binary-tree-zigzag-level-order-traversal",
+            "title": "Binary Tree Zigzag Level Order Traversal",
+            "next_ask_date": "2026-07-21T17:35:49.935108",
+            "review_stage": 2
+        },
+        {
+            "titleSlug": "same-tree",
+            "title": "Same Tree",
+            "next_ask_date": "2026-07-21T17:35:49.935112",
+            "review_stage": 2
+        },
+        {
+            "titleSlug": "binary-tree-maximum-path-sum",
+            "title": "Binary Tree Maximum Path Sum",
+            "next_ask_date": "2026-07-21T17:42:10.979546",
+            "review_stage": 2
+        },
+        {
+            "titleSlug": "balanced-binary-tree",
+            "title": "Balanced Binary Tree",
+            "next_ask_date": "2026-07-21T21:11:02.692372",
+            "review_stage": 2
+        }
+    ]
+}
