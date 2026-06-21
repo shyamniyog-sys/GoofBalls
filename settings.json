@@ -1,0 +1,9 @@
+{
+  "always_on_top": true,
+  "start_on_boot": false,
+  "pet_size": 137,
+  "opacity": 0.97,
+  "active_pet": "default",
+  "anim_interval_wag": 6000,
+  "anim_interval_tongue": 8000
+}
