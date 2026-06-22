@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 warnings.filterwarnings("ignore")
 
 # =====================================================================
-# CONFIGURATION & VARIABLES
+# CONFIGURATION AND VARIABLES
 # =====================================================================
 SYNC_COUNT = 20             # Number of latest submissions to fetch
 INITIAL_REVIEW_DAYS = 10    # Days before 1st review
@@ -40,7 +40,6 @@ except Exception:
     PADDLE_AVAILABLE = False
     cv2 = None
     np = None
-
 
 # =====================================================================
 # LEETCODE SCRAPER MODULE
